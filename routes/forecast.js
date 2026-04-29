@@ -1,5 +1,6 @@
 import express from "express";
-import { getAISurfReport } from "../services/ai.js";
+import { getAISurfReport } from "../services/openai.js";
+
 
 const router = express.Router();
 
