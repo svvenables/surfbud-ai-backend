@@ -2,34 +2,34 @@ import fetch from "node-fetch";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-export async function getAISurfReport() {
+export async function getAISurfReport(
+  spot = "Porthmeor",
+  day = "today",
+  time = "morning"
+) {
   if (!OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is missing");
   }
 
   const url = "https://api.openai.com/v1/chat/completions";
 
-  // NEW: rounding helper inside the prompt
   const prompt = `
-You are SurfBud AI, a surf forecaster for Porthmeor Beach, St Ives, Cornwall.
+You are SurfBud AI, a surf forecaster for ${spot}, Cornwall.
+
+Forecast for ${day}, ${time} session.
 
 IMPORTANT RULES:
-- When you extract swell height and period from Surfline, ALWAYS round them DOWN to whole numbers.
-  Examples:
-    3.9ft → 3ft
-    3.5ft → 3ft
-    2.2ft → 2ft
-    12.8s → 12s
+- When extracting swell height and period from Surfline, ALWAYS round DOWN to whole numbers.
 - Never exaggerate conditions.
-- Always stay within Steve’s cheat‑sheet bands.
+- Always follow Steve’s cheat‑sheet bands.
 
-1. Go to Surfline and check the forecast for Porthmeor.
+1. Go to Surfline and check the forecast for ${spot} for ${day} ${time}.
    Extract:
    - primary swell height (ft or m)
    - primary swell period (seconds)
    Then ROUND BOTH DOWN to whole numbers.
 
-2. Go to BBC Weather and check St Ives.
+2. Go to BBC Weather and check ${spot} or nearest town.
    Extract:
    - wind speed
    - wind direction
@@ -44,22 +44,18 @@ IMPORTANT RULES:
 
 4. Classify wind cleanliness:
    - Offshore = Clean
-   - Light cross-shore = Fair
+   - Light cross‑shore = Fair
    - Onshore = Messy
    - Strong onshore = Blown out
 
 Return ONLY valid JSON:
 
 {
-  "spot": "Porthmeor",
-  "swell": {
-    "height": number,
-    "period": number
-  },
-  "wind": {
-    "speed": number,
-    "direction": "string"
-  },
+  "spot": "${spot}",
+  "day": "${day}",
+  "time": "${time}",
+  "swell": { "height": number, "period": number },
+  "wind": { "speed": number, "direction": "string" },
   "waveSizeLabel": "string",
   "windCleanliness": "string",
   "summary": "string"
