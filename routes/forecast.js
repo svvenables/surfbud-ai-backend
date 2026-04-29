@@ -1,13 +1,15 @@
 import express from "express";
 import { getAISurfReport } from "../services/openai.js";
 
-
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
-    const report = await getAISurfReport();
+    const { spot, day, time } = req.body;
+
+    const report = await getAISurfReport(spot, day, time);
     res.json(report);
+
   } catch (err) {
     console.error("Forecast error:", err);
     res.status(500).json({ error: "AI forecast error" });
