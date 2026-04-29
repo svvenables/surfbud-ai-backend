@@ -2,49 +2,58 @@ import fetch from "node-fetch";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-if (!OPENAI_API_KEY) {
-  console.warn("WARNING: OPENAI_API_KEY is not set");
-}
-
 export async function getAISurfReport() {
+  if (!OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is missing");
+  }
+
   const url = "https://api.openai.com/v1/chat/completions";
 
   const prompt = `
 You are SurfBud AI, a surf forecaster for Porthmeor Beach, St Ives, Cornwall.
 
-1. Go to Surfline and find the forecast for Porthmeor.
-   - Extract: primary swell height (in ft or m) and primary swell period (in seconds).
+Your job:
+1. Go to Surfline and check the forecast for **Porthmeor**.
+   Extract:
+   - primary swell height (ft or m)
+   - primary swell period (seconds)
 
-2. Go to BBC Weather and find the forecast for St Ives (closest to Porthmeor).
-   - Extract: wind speed and wind direction for the main surfable part of the day (e.g. morning).
+2. Go to BBC Weather and check **St Ives**.
+   Extract:
+   - wind speed
+   - wind direction
 
-3. Using those values, decide:
-   - Wave size label: one of ["Flat", "Knee high", "Waist high", "Chest high", "Head high", "Overhead"].
-   - Wind cleanliness label: one of ["Clean", "Fair", "Messy", "Blown out"].
-   - Short human summary (1–2 sentences) describing how it will feel to surf a mid-length.
+3. Use this logic to classify wave size:
+   - <1ft = Flat
+   - 1–2ft = Knee high
+   - 2–3ft = Waist high
+   - 3–4ft = Chest high
+   - 4–6ft = Head high
+   - >6ft = Overhead
 
-4. Consider:
-   - Longer period + moderate height = more powerful, punchier waves.
-   - Short period + small height = weak, gutless waves.
-   - Offshore wind = clean; light cross-shore = okay; strong onshore = messy/blown out.
+4. Use this logic to classify wind cleanliness:
+   - Offshore = Clean
+   - Light cross-shore = Fair
+   - Onshore = Messy
+   - Strong onshore = Blown out
 
-Return ONLY valid JSON in this exact shape:
+5. Return ONLY valid JSON in this shape:
 
 {
   "spot": "Porthmeor",
   "swell": {
-    "height": number,        // in feet if Surfline uses ft, or metres if m
-    "period": number         // in seconds
+    "height": number,
+    "period": number
   },
   "wind": {
-    "speed": number,         // in mph or kph, whichever BBC shows
-    "direction": "string"    // e.g. "SW", "N", "ESE"
+    "speed": number,
+    "direction": "string"
   },
-  "waveSizeLabel": "string",       // e.g. "Waist high"
-  "windCleanliness": "string",     // e.g. "Clean"
-  "summary": "string"              // short human description
+  "waveSizeLabel": "string",
+  "windCleanliness": "string",
+  "summary": "string"
 }
-  `;
+`;
 
   const body = {
     model: "gpt-4.1-mini",
@@ -65,13 +74,12 @@ Return ONLY valid JSON in this exact shape:
   });
 
   const data = await res.json();
-
   const content = data.choices?.[0]?.message?.content || "{}";
 
   try {
     return JSON.parse(content);
-  } catch (e) {
-    console.error("Failed to parse AI JSON:", content);
+  } catch (err) {
+    console.error("AI JSON error:", content);
     throw new Error("AI returned invalid JSON");
   }
 }
