@@ -9,13 +9,25 @@ export async function getAISurfReport() {
 
   const url = "https://api.openai.com/v1/chat/completions";
 
+  // NEW: rounding helper inside the prompt
   const prompt = `
 You are SurfBud AI, a surf forecaster for Porthmeor Beach, St Ives, Cornwall.
+
+IMPORTANT RULES:
+- When you extract swell height and period from Surfline, ALWAYS round them DOWN to whole numbers.
+  Examples:
+    3.9ft → 3ft
+    3.5ft → 3ft
+    2.2ft → 2ft
+    12.8s → 12s
+- Never exaggerate conditions.
+- Always stay within Steve’s cheat‑sheet bands.
 
 1. Go to Surfline and check the forecast for Porthmeor.
    Extract:
    - primary swell height (ft or m)
    - primary swell period (seconds)
+   Then ROUND BOTH DOWN to whole numbers.
 
 2. Go to BBC Weather and check St Ives.
    Extract:
