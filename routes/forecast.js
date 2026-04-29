@@ -1,33 +1,16 @@
 import express from "express";
-import getOpenMeteoForecast from "../services/openmeteo.js";
-import getMetOfficeForecast from "../services/metoffice.js";
-import buildCheatSheet from "../utils/cheatsheet.js";
+import { getAISurfReport } from "../services/ai.js";
 
 const router = express.Router();
 
+// Ignore lat/lon for now – we always do Porthmeor
 router.get("/", async (req, res) => {
   try {
-    const { lat, lon } = req.query;
-
-    if (!lat || !lon) {
-      return res.status(400).json({ error: "lat and lon are required" });
-    }
-
-    const [openMeteo, metOffice] = await Promise.all([
-      getOpenMeteoForecast(lat, lon),
-      getMetOfficeForecast(lat, lon)
-    ]);
-
-    const cheatSheet = buildCheatSheet(openMeteo);
-
-    res.json({
-      openMeteo,
-      metOffice,
-      cheatSheet
-    });
+    const report = await getAISurfReport();
+    res.json(report);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Forecast error" });
+    res.status(500).json({ error: "AI forecast error" });
   }
 });
 
